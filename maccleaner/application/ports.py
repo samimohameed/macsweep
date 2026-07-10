@@ -32,6 +32,10 @@ class FileSystemPort(Protocol):
 
     def exists(self, path: Path) -> bool: ...
 
+    def is_dir(self, path: Path) -> bool:
+        """True for real directories (not symlinks to directories)."""
+        ...
+
 
 class RemoverPort(Protocol):
     """The only interface through which anything is ever removed."""

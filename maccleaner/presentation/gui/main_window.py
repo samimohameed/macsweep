@@ -159,10 +159,15 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
-        if answer is not QMessageBox.StandardButton.Yes:
+        if answer != QMessageBox.StandardButton.Yes:
             return
         self._set_busy(True, "Moving items to Trash…")
         self._clean_worker = CleanWorker(self._app, items)
+        self._clean_worker.progress.connect(
+            lambda cur, total, path: self.statusBar().showMessage(
+                f"Moving to Trash ({cur}/{total}): {path}"
+            )
+        )
         self._clean_worker.finished_with.connect(self._on_clean_done)
         self._clean_worker.failed.connect(self._on_worker_failed)
         self._clean_worker.start()
@@ -171,11 +176,15 @@ class MainWindow(QMainWindow):
         self._set_busy(False)
         message = (
             f"Freed {_human(report.freed_bytes)} — "
-            f"{len(report.removed)} items moved to Trash."
+            f"{len(report.removed)} items moved to Trash.\n"
+            "Space is reclaimed for good once you empty the Trash."
         )
         if report.failed:
-            message += f" ({len(report.failed)} skipped/blocked.)"
-        self.statusBar().showMessage(message)
+            details = "\n".join(
+                f"• {item.path}: {reason}" for item, reason in report.failed[:8]
+            )
+            message += f"\n\n{len(report.failed)} items were skipped:\n{details}"
+        self.statusBar().showMessage(message.splitlines()[0])
         QMessageBox.information(self, "Done", message)
         self._start_scan()  # refresh the dashboard
 
@@ -187,7 +196,7 @@ class MainWindow(QMainWindow):
             group = self.tree.topLevelItem(g)
             for c in range(group.childCount()):
                 child = group.child(c)
-                if child.checkState(0) is Qt.CheckState.Checked:
+                if child.checkState(0) == Qt.CheckState.Checked:
                     data = child.data(0, ITEM_ROLE)
                     if data is not None:
                         items.append(data)

@@ -130,6 +130,34 @@ class TestSymlinkEscape(unittest.TestCase):
             self.assertTrue(precious.exists())
 
 
+class TestScanRecursion(unittest.TestCase):
+    """A directory that fails the age gate must still be searched for old
+    content inside it — that's where most reclaimable space lives."""
+
+    def test_finds_old_content_inside_fresh_directory(self):
+        with _home_tmpdir() as tmp:
+            root = Path(tmp) / "Caches"
+            root.mkdir()
+            app_cache = root / "com.example.app"
+            app_cache.mkdir()
+            old_blob = app_cache / "old-blob.bin"
+            old_blob.write_bytes(b"x" * 100)
+            old = time.time() - 30 * 86_400
+            os.utime(old_blob, (old, old))
+            fresh = app_cache / "fresh.db"
+            fresh.write_text("just written")  # makes app_cache age-gated
+
+            target = CleanupTarget(
+                id="t", name="t", description="", root=root, min_age_days=7
+            )
+            report = ScanUseCase(LocalFileSystem(), POLICY).execute([target])
+
+            paths = [i.path for i in report.items]
+            self.assertIn(old_blob.resolve(), paths)      # old content found
+            self.assertNotIn(app_cache.resolve(), paths)  # dir itself gated
+            self.assertNotIn(fresh.resolve(), paths)      # fresh file gated
+
+
 class RecordingRemover:
     def __init__(self):
         self.removed: list[Path] = []

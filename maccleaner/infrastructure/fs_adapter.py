@@ -20,6 +20,9 @@ class LocalFileSystem:
     def exists(self, path: Path) -> bool:
         return path.exists()
 
+    def is_dir(self, path: Path) -> bool:
+        return path.is_dir() and not path.is_symlink()
+
     def size_of(self, path: Path) -> int:
         if path.is_file() or path.is_symlink():
             try:

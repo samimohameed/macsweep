@@ -45,6 +45,7 @@ class ScanWorker(QThread):
 
 
 class CleanWorker(QThread):
+    progress = Signal(int, int, str)  # current, total, path
     finished_with = Signal(CleanReport)
     failed = Signal(str)
 
@@ -56,8 +57,17 @@ class CleanWorker(QThread):
     def run(self) -> None:
         try:
             # The GUI always moves items to Trash (recoverable); permanent
-            # deletion is deliberately CLI-only.
-            report = self._app.clean(self._items, dry_run=False, permanent=False)
-            self.finished_with.emit(report)
+            # deletion is deliberately CLI-only. Items are cleaned one at a
+            # time so the UI can show which path is being moved.
+            merged = CleanReport(dry_run=False)
+            total = len(self._items)
+            for index, item in enumerate(self._items, start=1):
+                # Throttle UI updates on huge batches.
+                if total <= 100 or index % 50 == 0 or index == total:
+                    self.progress.emit(index, total, str(item.path))
+                report = self._app.clean([item], dry_run=False, permanent=False)
+                merged.removed.extend(report.removed)
+                merged.failed.extend(report.failed)
+            self.finished_with.emit(merged)
         except Exception as exc:
             self.failed.emit(str(exc))
