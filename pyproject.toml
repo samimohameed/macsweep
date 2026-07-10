@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maccleaner"
+version = "0.2.0"
+description = "Safe, whitelist-only storage cleaner for macOS — never touches system files, apps, or your documents."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Sami Mohamed" }]
+requires-python = ">=3.9"
+keywords = ["macos", "cleaner", "disk-space", "cache", "storage"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: MacOS X",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.optional-dependencies]
+gui = ["PySide6-Essentials>=6.6"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+maccleaner = "maccleaner.presentation.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/samimohamed/mac-cleaner"
+Issues = "https://github.com/samimohamed/mac-cleaner/issues"
+
+[tool.setuptools.packages.find]
+include = ["maccleaner*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
