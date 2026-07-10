@@ -1,6 +1,21 @@
 # MacCleaner — Safe Storage Cleaner for macOS
 
-A whitelist-only storage cleaner that reclaims disk space from caches, logs, and developer-tool build artifacts. It is designed so that it **cannot** touch the OS, system files, installed applications, or your personal data — by architecture, not just by convention.
+[![CI](https://github.com/OWNER/mac-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/mac-cleaner/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
+![No sudo, ever](https://img.shields.io/badge/sudo-never-brightgreen)
+
+A free, open-source alternative to CleanMyMac for reclaiming disk space from caches, logs, and developer-tool build artifacts. **Whitelist-only by architecture**: it cannot touch the OS, system files, installed applications, or your personal data — the safety rules are enforced in code, not by convention, and covered by CI-run tests.
+
+![MacCleaner scan dashboard](docs/screenshot.png)
+
+|  | MacCleaner | CleanMyMac | DaisyDisk |
+|---|---|---|---|
+| Price | **Free, MIT** | $40/yr | $10 |
+| Open source | **Yes** | No | No |
+| Can touch system files / your documents | **No — blocked by architecture** | Yes | Yes |
+| Needs admin rights | **Never** | Yes | For some ops |
+| Recoverable by default (Trash) | **Yes** | Partially | No |
 
 Comes as both a **desktop app** and a CLI. The core requires only Python 3.9+ (included with macOS Command Line Tools) and has zero third-party dependencies; the GUI optionally uses PySide6. Never needs `sudo` — refuse to run it with `sudo`.
 
