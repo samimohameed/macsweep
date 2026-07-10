@@ -1,12 +1,12 @@
-# Contributing to MacCleaner
+# Contributing to MacSweep
 
 Thanks for helping! The easiest and most valuable contribution is **adding a new cleanup target** — see below.
 
 ## Ground rules (the safety model is non-negotiable)
 
-MacCleaner's whole value is that it *cannot* damage a Mac. Every PR must preserve that:
+MacSweep's whole value is that it *cannot* damage a Mac. Every PR must preserve that:
 
-1. **Never weaken `SafetyPolicy`** (`maccleaner/domain/policies.py`). The blocklist and symlink-escape checks apply on top of every target — including yours.
+1. **Never weaken `SafetyPolicy`** (`macsweep/domain/policies.py`). The blocklist and symlink-escape checks apply on top of every target — including yours.
 2. **All removal goes through `CleanUseCase`.** Do not add a second code path that deletes anything.
 3. **Whitelist only.** No feature may walk arbitrary directories. New locations are added as `CleanupTarget` entries, nothing else.
 4. **No `sudo`, ever.** User-scope locations only.
@@ -15,22 +15,22 @@ MacCleaner's whole value is that it *cannot* damage a Mac. Every PR must preserv
 
 ## Adding a cleanup target (great first PR!)
 
-1. Append a `CleanupTarget` to `default_targets()` in `maccleaner/infrastructure/macos_targets.py`:
+1. Append a `CleanupTarget` to `default_targets()` in `macsweep/infrastructure/macos_targets.py`:
    - `root` must be a user-scope absolute path (usually under `~/Library` or a tool's cache dir).
    - Pick a conservative `min_age_days` (7+ for caches, 30 for anything the user might miss).
    - Use `Risk.OPT_IN` if removal could surprise anyone.
    - Write a `description` that explains *why* it is safe to remove.
-2. Run `python3 -m maccleaner scan --only your-target-id -v` and check the skipped/errors output.
+2. Run `python3 -m macsweep scan --only your-target-id -v` and check the skipped/errors output.
 3. Add a test if the target has any subtlety (globs, opt-in, unusual layout).
 
 ## Development setup
 
 ```bash
-git clone https://github.com/<you>/mac-cleaner && cd mac-cleaner
+git clone https://github.com/<you>/macsweep && cd macsweep
 python3 -m pip install -e '.[dev,gui]'
 python3 -m pytest tests/ -v      # safety tests
-python3 -m maccleaner scan       # read-only, always safe to run
-python3 -m maccleaner gui        # desktop app
+python3 -m macsweep scan       # read-only, always safe to run
+python3 -m macsweep gui        # desktop app
 ```
 
 ## Architecture

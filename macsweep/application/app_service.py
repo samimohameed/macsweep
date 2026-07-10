@@ -3,7 +3,7 @@
 Bundles target selection, scanning, and cleaning behind one object so
 presentation layers contain no business logic. Depends only on domain
 entities and the application ports; concrete adapters are injected by
-the composition root (maccleaner/composition.py).
+the composition root (macsweep/composition.py).
 """
 from __future__ import annotations
 

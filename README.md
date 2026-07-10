@@ -1,15 +1,15 @@
-# MacCleaner — Safe Storage Cleaner for macOS
+# MacSweep — Safe Storage Cleaner for macOS
 
-[![CI](https://github.com/samimohameed/mac-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/samimohameed/mac-cleaner/actions/workflows/ci.yml)
+[![CI](https://github.com/samimohameed/macsweep/actions/workflows/ci.yml/badge.svg)](https://github.com/samimohameed/macsweep/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
 ![No sudo, ever](https://img.shields.io/badge/sudo-never-brightgreen)
 
 A free, open-source alternative to CleanMyMac for reclaiming disk space from caches, logs, and developer-tool build artifacts. **Whitelist-only by architecture**: it cannot touch the OS, system files, installed applications, or your personal data — the safety rules are enforced in code, not by convention, and covered by CI-run tests.
 
-![MacCleaner scan dashboard](docs/screenshot.png)
+![MacSweep scan dashboard](docs/screenshot.png)
 
-|  | MacCleaner | CleanMyMac | DaisyDisk |
+|  | MacSweep | CleanMyMac | DaisyDisk |
 |---|---|---|---|
 | Price | **Free, MIT** | $40/yr | $10 |
 | Open source | **Yes** | No | No |
@@ -22,8 +22,8 @@ Comes as both a **desktop app** and a CLI. The core requires only Python 3.9+ (i
 ## Desktop app
 
 ```bash
-python3 -m pip install 'maccleaner[gui]'   # or from a clone: pip install -e '.[gui]'
-python3 -m maccleaner gui
+python3 -m pip install 'macsweep[gui]'   # or from a clone: pip install -e '.[gui]'
+python3 -m macsweep gui
 ```
 
 Scan, review every item with checkboxes grouped by category, and clean with one click. The GUI **only ever moves items to the Trash** — everything stays recoverable; permanent deletion is deliberately CLI-only.
@@ -31,22 +31,22 @@ Scan, review every item with checkboxes grouped by category, and clean with one 
 ## CLI quick start
 
 ```bash
-cd mac-cleaner
+cd macsweep
 
 # See what it's allowed to clean
-python3 -m maccleaner targets
+python3 -m macsweep targets
 
 # Read-only scan: shows reclaimable space, removes nothing
-python3 -m maccleaner scan
+python3 -m macsweep scan
 
 # Dry run of a clean (default — still removes nothing)
-python3 -m maccleaner clean
+python3 -m macsweep clean
 
 # Actually clean: items are moved to Trash (fully recoverable)
-python3 -m maccleaner clean --yes
+python3 -m macsweep clean --yes
 
 # Include old Trash items (opt-in, permanent, double-confirmed)
-python3 -m maccleaner clean --include trash --permanent --yes
+python3 -m macsweep clean --include trash --permanent --yes
 ```
 
 Useful options: `--only user-caches` (restrict targets), `--min-age 30` (only touch older items; can only raise the built-in minimums), `-v` (show skipped items and why).
@@ -65,7 +65,7 @@ Useful options: `--only user-caches` (restrict targets), `--min-age 30` (only to
 ## Architecture (Clean Architecture)
 
 ```
-maccleaner/
+macsweep/
 ├── domain/            # Enterprise rules — zero dependencies, pure Python
 │   ├── entities.py    #   CleanupTarget, CleanupItem, ScanReport, CleanReport
 │   └── policies.py    #   SafetyPolicy (the guard layer)

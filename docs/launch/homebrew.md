@@ -5,22 +5,22 @@ One-time setup, after the repo is pushed and tagged.
 ## 1. Tag a release
 
 ```bash
-cd ~/Documents/mac-cleaner
+cd ~/Documents/macsweep
 git tag v0.2.0 && git push origin main --tags
 gh release create v0.2.0 --title "v0.2.0" --notes-file CHANGELOG.md
 ```
 
 ## 2. Create the tap repository
 
-Create a new GitHub repo named exactly `homebrew-maccleaner` (the `homebrew-` prefix is required), containing `Formula/maccleaner.rb`:
+Create a new GitHub repo named exactly `homebrew-macsweep` (the `homebrew-` prefix is required), containing `Formula/macsweep.rb`:
 
 ```ruby
-class Maccleaner < Formula
+class Macsweep < Formula
   include Language::Python::Virtualenv
 
   desc "Safe, whitelist-only storage cleaner for macOS - never needs sudo"
-  homepage "https://github.com/samimohameed/mac-cleaner"
-  url "https://github.com/samimohameed/mac-cleaner/archive/refs/tags/v0.2.0.tar.gz"
+  homepage "https://github.com/samimohameed/macsweep"
+  url "https://github.com/samimohameed/macsweep/archive/refs/tags/v0.2.0.tar.gz"
   sha256 "REPLACE_ME"   # see step 3
   license "MIT"
 
@@ -31,7 +31,7 @@ class Maccleaner < Formula
   end
 
   test do
-    assert_match "user-caches", shell_output("#{bin}/maccleaner targets")
+    assert_match "user-caches", shell_output("#{bin}/macsweep targets")
   end
 end
 ```
@@ -39,7 +39,7 @@ end
 ## 3. Fill in the checksum
 
 ```bash
-curl -sL https://github.com/samimohameed/mac-cleaner/archive/refs/tags/v0.2.0.tar.gz | shasum -a 256
+curl -sL https://github.com/samimohameed/macsweep/archive/refs/tags/v0.2.0.tar.gz | shasum -a 256
 ```
 
 Paste the result into `sha256`.
@@ -47,8 +47,8 @@ Paste the result into `sha256`.
 ## 4. Users install with
 
 ```bash
-brew tap samimohameed/maccleaner
-brew install maccleaner
+brew tap samimohameed/macsweep
+brew install macsweep
 ```
 
 Add these two lines to the README install section once the tap works.
@@ -61,4 +61,4 @@ python3 -m build
 python3 -m twine upload dist/*     # needs a free account at pypi.org
 ```
 
-Then `pip install 'maccleaner[gui]'` works for everyone, exactly as the README already promises.
+Then `pip install 'macsweep[gui]'` works for everyone, exactly as the README already promises.

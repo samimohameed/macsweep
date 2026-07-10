@@ -3,7 +3,7 @@ requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "maccleaner"
+name = "macsweep"
 version = "0.2.0"
 description = "Safe, whitelist-only storage cleaner for macOS — never touches system files, apps, or your documents."
 readme = "README.md"
@@ -28,14 +28,14 @@ gui = ["PySide6-Essentials>=6.6"]
 dev = ["pytest>=7"]
 
 [project.scripts]
-maccleaner = "maccleaner.presentation.cli:main"
+macsweep = "macsweep.presentation.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/samimohameed/mac-cleaner"
-Issues = "https://github.com/samimohameed/mac-cleaner/issues"
+Homepage = "https://github.com/samimohameed/macsweep"
+Issues = "https://github.com/samimohameed/macsweep/issues"
 
 [tool.setuptools.packages.find]
-include = ["maccleaner*"]
+include = ["macsweep*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

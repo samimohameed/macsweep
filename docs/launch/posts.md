@@ -11,7 +11,7 @@ early responsiveness is what turns a post into stars and contributors.
 
 **Body:**
 
-I got tired of paying for cleaner apps I couldn't audit, so I built MacCleaner: a free, MIT-licensed storage cleaner for macOS.
+I got tired of paying for cleaner apps I couldn't audit, so I built MacSweep: a free, MIT-licensed storage cleaner for macOS.
 
 The design goal was different from other cleaners: instead of promising to be careful, it's built so it *can't* be dangerous:
 
@@ -23,7 +23,7 @@ The design goal was different from other cleaners: instead of promising to be ca
 
 It found ~1.4 GB on my machine on first scan. Desktop app (screenshot in the repo) + CLI.
 
-GitHub: https://github.com/samimohameed/mac-cleaner
+GitHub: https://github.com/samimohameed/macsweep
 
 It's early days — if your favorite tool's cache isn't covered, adding a target is a ~15-line PR and there are "good first issue" tickets waiting.
 
@@ -31,7 +31,7 @@ It's early days — if your favorite tool's cache isn't covered, adding a target
 
 ## Show HN
 
-**Title:** Show HN: MacCleaner – open-source Mac cleaner that can't touch your files by design
+**Title:** Show HN: MacSweep – open-source Mac cleaner that can't touch your files by design
 
 **Body:**
 
@@ -48,7 +48,7 @@ The core idea is defense in depth, enforced by architecture (Clean Architecture 
 
 Python 3.9+ stdlib only for the core; optional PySide6 GUI. I'd genuinely welcome attempts to construct a hostile input (symlink chains, TOCTOU races) that gets past the policy — that's what the test suite tries to do.
 
-https://github.com/samimohameed/mac-cleaner
+https://github.com/samimohameed/macsweep
 
 ---
 
@@ -56,6 +56,6 @@ https://github.com/samimohameed/mac-cleaner
 
 Cleaned 1.4 GB off my Mac with a cleaner I can actually audit.
 
-I built MacCleaner: free, open-source, whitelist-only — it architecturally *cannot* touch system files or your documents. Everything goes to the Trash. Never needs sudo.
+I built MacSweep: free, open-source, whitelist-only — it architecturally *cannot* touch system files or your documents. Everything goes to the Trash. Never needs sudo.
 
-⭐ https://github.com/samimohameed/mac-cleaner
+⭐ https://github.com/samimohameed/macsweep

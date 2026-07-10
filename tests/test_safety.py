@@ -17,11 +17,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from maccleaner.application.clean import CleanUseCase
-from maccleaner.application.scan import ScanUseCase
-from maccleaner.domain.entities import CleanupItem, CleanupTarget
-from maccleaner.domain.policies import SafetyPolicy
-from maccleaner.infrastructure.fs_adapter import LocalFileSystem
+from macsweep.application.clean import CleanUseCase
+from macsweep.application.scan import ScanUseCase
+from macsweep.domain.entities import CleanupItem, CleanupTarget
+from macsweep.domain.policies import SafetyPolicy
+from macsweep.infrastructure.fs_adapter import LocalFileSystem
 
 HOME = Path.home()
 POLICY = SafetyPolicy()
@@ -34,7 +34,7 @@ def _home_tmpdir() -> tempfile.TemporaryDirectory:
     SafetyPolicy blocklist protects — so tests that expect a *successful*
     removal must run somewhere the policy actually allows.
     """
-    return tempfile.TemporaryDirectory(dir=str(HOME), prefix=".maccleaner-test-")
+    return tempfile.TemporaryDirectory(dir=str(HOME), prefix=".macsweep-test-")
 
 
 class TestSafetyPolicy(unittest.TestCase):

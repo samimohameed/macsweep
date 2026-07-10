@@ -23,6 +23,6 @@ jobs:
         run: python -m pytest tests/ -v
       - name: Read-only scan smoke test
         run: |
-          python -m maccleaner targets
-          python -m maccleaner scan
-          python -m maccleaner clean   # dry run by default — removes nothing
+          python -m macsweep targets
+          python -m macsweep scan
+          python -m macsweep clean   # dry run by default — removes nothing

@@ -1,16 +1,16 @@
 """CLI presentation layer.
 
-All wiring lives in maccleaner/composition.py; all selection/scan/clean
+All wiring lives in macsweep/composition.py; all selection/scan/clean
 logic lives in the AppService facade. This module only parses arguments
 and formats output.
 
 Usage:
-    python3 -m maccleaner scan
-    python3 -m maccleaner scan --include trash
-    python3 -m maccleaner clean                # dry run (default!)
-    python3 -m maccleaner clean --yes          # actually move to Trash
-    python3 -m maccleaner clean --include trash --permanent --yes
-    python3 -m maccleaner gui                  # desktop app (needs PySide6)
+    python3 -m macsweep scan
+    python3 -m macsweep scan --include trash
+    python3 -m macsweep clean                # dry run (default!)
+    python3 -m macsweep clean --yes          # actually move to Trash
+    python3 -m macsweep clean --include trash --permanent --yes
+    python3 -m macsweep gui                  # desktop app (needs PySide6)
 """
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def _print_report(report, names: dict[str, str], verbose: bool) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="maccleaner",
+        prog="macsweep",
         description="Safe, whitelist-only storage cleaner for macOS. "
                     "Never touches system files, applications, or user data.",
     )

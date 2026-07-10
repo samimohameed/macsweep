@@ -9,7 +9,7 @@ labels: ["bug"]
 **What did you expect?**
 
 **Command or GUI action:**
-e.g. `python3 -m maccleaner clean --yes`
+e.g. `python3 -m macsweep clean --yes`
 
 **Output** (paste `scan -v` / error output):
 

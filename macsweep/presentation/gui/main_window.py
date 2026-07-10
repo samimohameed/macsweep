@@ -41,7 +41,7 @@ def _human(size: int) -> str:
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("MacCleaner — safe, recoverable cleaning")
+        self.setWindowTitle("MacSweep — safe, recoverable cleaning")
         self.resize(860, 620)
 
         self._reporter = SignalReporter()

@@ -1,6 +1,6 @@
 """GUI entry point.
 
-Kept import-light so `maccleaner gui` fails with a helpful message when
+Kept import-light so `macsweep gui` fails with a helpful message when
 PySide6 (an optional dependency) is missing.
 """
 from __future__ import annotations
@@ -14,7 +14,7 @@ def run_gui() -> int:
     except ImportError:
         print(
             "The desktop app requires PySide6. Install it with:\n"
-            "    python3 -m pip install 'maccleaner[gui]'\n"
+            "    python3 -m pip install 'macsweep[gui]'\n"
             "or: python3 -m pip install PySide6",
             file=sys.stderr,
         )
@@ -23,8 +23,8 @@ def run_gui() -> int:
     from .main_window import MainWindow
 
     qt_app = QApplication(sys.argv[:1])
-    qt_app.setApplicationName("MacCleaner")
-    qt_app.setApplicationDisplayName("MacCleaner")
+    qt_app.setApplicationName("MacSweep")
+    qt_app.setApplicationDisplayName("MacSweep")
     window = MainWindow()
     window.show()
     return qt_app.exec()

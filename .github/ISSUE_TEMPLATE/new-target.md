@@ -1,6 +1,6 @@
 ---
 name: New cleanup target
-about: Propose a new cache/log location for MacCleaner to clean
+about: Propose a new cache/log location for MacSweep to clean
 title: "Target: <tool or app name>"
 labels: ["new-target", "good first issue"]
 ---

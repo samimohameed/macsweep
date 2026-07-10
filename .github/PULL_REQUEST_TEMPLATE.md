@@ -9,4 +9,4 @@
 
 ## How I verified it
 
-<!-- e.g. output of `python3 -m maccleaner scan --only my-target -v` -->
+<!-- e.g. output of `python3 -m macsweep scan --only my-target -v` -->
