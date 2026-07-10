@@ -1,4 +1,7 @@
+<img src="docs/icon.svg" alt="MacSweep icon" width="96" align="left">
+
 # MacSweep — Safe Storage Cleaner for macOS
+<br clear="left">
 
 [![CI](https://github.com/samimohameed/macsweep/actions/workflows/ci.yml/badge.svg)](https://github.com/samimohameed/macsweep/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)

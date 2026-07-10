@@ -37,5 +37,8 @@ Issues = "https://github.com/samimohameed/macsweep/issues"
 [tool.setuptools.packages.find]
 include = ["macsweep*"]
 
+[tool.setuptools.package-data]
+"macsweep.presentation.gui" = ["assets/*.png"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
