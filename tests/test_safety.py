@@ -27,6 +27,20 @@ HOME = Path.home()
 POLICY = SafetyPolicy()
 
 
+class BackdatedFS(LocalFileSystem):
+    """Age from mtime only, for tests that fake old files with os.utime.
+
+    Production LocalFileSystem deliberately also considers ctime (which
+    userspace cannot backdate) so freshly downloaded files with backdated
+    mtimes are treated as new — but that would defeat os.utime-based test
+    fixtures, whose ctime is always 'now'.
+    """
+
+    @staticmethod
+    def _stat_timestamp(st):
+        return st.st_mtime
+
+
 def _home_tmpdir() -> tempfile.TemporaryDirectory:
     """Temp dir under $HOME instead of the default /var/folders/…
 
@@ -119,7 +133,7 @@ class TestSymlinkEscape(unittest.TestCase):
             target = CleanupTarget(
                 id="t", name="t", description="", root=fake_cache, min_age_days=1
             )
-            report = ScanUseCase(LocalFileSystem(), POLICY).execute([target])
+            report = ScanUseCase(BackdatedFS(), POLICY).execute([target])
 
             scanned_paths = [i.path for i in report.items]
             self.assertNotIn(fake_docs, scanned_paths)
@@ -150,12 +164,40 @@ class TestScanRecursion(unittest.TestCase):
             target = CleanupTarget(
                 id="t", name="t", description="", root=root, min_age_days=7
             )
-            report = ScanUseCase(LocalFileSystem(), POLICY).execute([target])
+            report = ScanUseCase(BackdatedFS(), POLICY).execute([target])
 
             paths = [i.path for i in report.items]
             self.assertIn(old_blob.resolve(), paths)      # old content found
             self.assertNotIn(app_cache.resolve(), paths)  # dir itself gated
             self.assertNotIn(fresh.resolve(), paths)      # fresh file gated
+
+
+class TestBackdatedDownloads(unittest.TestCase):
+    """Downloaders like Homebrew's preserve the server's mtime, so a file
+    fetched minutes ago can look months old. The real adapter must treat
+    it as fresh (ctime cannot be backdated), keeping the age gate honest."""
+
+    def test_freshly_created_file_with_old_mtime_is_treated_as_fresh(self):
+        with _home_tmpdir() as tmp:
+            root = Path(tmp) / "Caches"
+            root.mkdir()
+            bottle = root / "bottle.tar.gz"
+            bottle.write_bytes(b"x" * 100)          # "downloaded" just now
+            old = time.time() - 300 * 86_400
+            os.utime(bottle, (old, old))            # downloader backdates mtime
+
+            fs = LocalFileSystem()                  # the real adapter
+            self.assertLess(fs.age_days(bottle.resolve()), 1.0)
+
+            target = CleanupTarget(
+                id="t", name="t", description="", root=root, min_age_days=7
+            )
+            report = ScanUseCase(fs, POLICY).execute([target])
+            self.assertEqual(report.items, [])      # age-gated, not swept
+            self.assertTrue(
+                any("minimum age" in r for _p, r in report.skipped),
+                f"expected age-gate skip: {report.skipped}",
+            )
 
 
 class TestOverlappingTargets(unittest.TestCase):
@@ -183,7 +225,7 @@ class TestOverlappingTargets(unittest.TestCase):
             nested = CleanupTarget(
                 id="brew", name="b", description="", root=brew, min_age_days=1
             )
-            report = ScanUseCase(LocalFileSystem(), POLICY).execute([broad, nested])
+            report = ScanUseCase(BackdatedFS(), POLICY).execute([broad, nested])
 
             paths = [i.path for i in report.items]
             self.assertEqual(len(paths), len(set(paths)), "duplicate items found")
@@ -213,7 +255,7 @@ class TestOverlappingTargets(unittest.TestCase):
             target = CleanupTarget(
                 id="t", name="t", description="", root=caches, min_age_days=1
             )
-            report = ScanUseCase(LocalFileSystem(), POLICY).execute([target])
+            report = ScanUseCase(BackdatedFS(), POLICY).execute([target])
 
             total = sum(i.size_bytes for i in report.items)
             self.assertEqual(total, 100, f"double-counted: {report.items}")
@@ -250,7 +292,7 @@ class TestCleanUseCase(unittest.TestCase):
             item = CleanupItem("t", victim, 100, 30.0)
             remover = RecordingRemover()
             result = CleanUseCase(
-                LocalFileSystem(), remover, POLICY, NullReporter()
+                BackdatedFS(), remover, POLICY, NullReporter()
             ).execute([item], {"t": target}, dry_run=True)
 
             self.assertEqual(remover.removed, [])
@@ -269,7 +311,7 @@ class TestCleanUseCase(unittest.TestCase):
             hostile = CleanupItem("t", HOME, 1, 999.0)  # home dir itself!
             remover = RecordingRemover()
             result = CleanUseCase(
-                LocalFileSystem(), remover, POLICY, NullReporter()
+                BackdatedFS(), remover, POLICY, NullReporter()
             ).execute([hostile], {"t": target}, dry_run=False)
 
             self.assertEqual(remover.removed, [])
@@ -279,7 +321,7 @@ class TestCleanUseCase(unittest.TestCase):
         item = CleanupItem("nonexistent", Path("/tmp/x"), 1, 99.0)
         remover = RecordingRemover()
         result = CleanUseCase(
-            LocalFileSystem(), remover, POLICY, NullReporter()
+            BackdatedFS(), remover, POLICY, NullReporter()
         ).execute([item], {}, dry_run=False)
         self.assertEqual(remover.removed, [])
         self.assertEqual(len(result.failed), 1)
@@ -296,7 +338,7 @@ class TestCleanUseCase(unittest.TestCase):
             item = CleanupItem("t", fresh, 8, 0.0)
             remover = RecordingRemover()
             result = CleanUseCase(
-                LocalFileSystem(), remover, POLICY, NullReporter()
+                BackdatedFS(), remover, POLICY, NullReporter()
             ).execute([item], {"t": target}, dry_run=False)
             self.assertEqual(remover.removed, [])
             self.assertEqual(len(result.failed), 1)
@@ -316,7 +358,7 @@ class TestCleanUseCase(unittest.TestCase):
             item = CleanupItem("t", victim.resolve(), 50, 30.0)
             remover = RecordingRemover()
             result = CleanUseCase(
-                LocalFileSystem(), remover, POLICY, NullReporter()
+                BackdatedFS(), remover, POLICY, NullReporter()
             ).execute([item], {"t": target}, dry_run=False)
             self.assertEqual(len(result.removed), 1)
             self.assertEqual(remover.removed, [victim.resolve()])

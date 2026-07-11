@@ -148,5 +148,9 @@ class ScanUseCase:
                 )
             except PermissionError:
                 report.skipped.append((child, "permission denied"))
+            except FileNotFoundError:
+                # Broken symlink, or the entry vanished mid-scan (caches
+                # are living directories) — nothing to report on.
+                report.skipped.append((child, "broken symlink or vanished"))
             except OSError as exc:
                 report.errors.append((child, str(exc)))

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.2 — 2026-07-11
+
+- **Fix: file ages are now honest for downloaded files.** Downloaders like Homebrew's preserve the *server's* modification time, so a bottle fetched an hour ago could show as "304 days old" and be swept by mistake. Age now also considers ctime (last change on this disk, which cannot be backdated), so freshly arrived files are correctly age-gated.
+- Broken symlinks and files that vanish mid-scan are quietly skipped instead of reported as errors.
+
 ## v0.2.1 — 2026-07-11
 
 - **Fix: scan totals no longer double-count.** Overlapping targets (e.g. the Homebrew cache living inside ~/Library/Caches) and symlink aliases within a cache (Homebrew's top-level links into downloads/) could count the same file twice and list it twice in the results. Each item is now claimed exactly once.
