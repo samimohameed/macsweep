@@ -20,7 +20,7 @@ from ..domain.entities import (
 from ..domain.policies import SafetyPolicy
 from .clean import CleanUseCase
 from .ports import FileSystemPort, RemoverPort, ReporterPort
-from .scan import ScanUseCase
+from .scan import ScanUseCase, resolve_roots
 
 
 class AppService:
@@ -81,10 +81,13 @@ class AppService:
         use_case = ScanUseCase(self._fs, self._policy)
         if progress is None:
             return use_case.execute(targets)
+        # Scanning one target at a time (for progress) still needs the full
+        # selection's roots so overlapping targets never claim an item twice.
+        all_roots = resolve_roots(self._fs, targets)
         report = ScanReport()
         for target in targets:
             progress(target)
-            partial = use_case.execute([target])
+            partial = use_case.execute([target], exclude_roots=all_roots)
             report.items.extend(partial.items)
             report.skipped.extend(partial.skipped)
             report.errors.extend(partial.errors)

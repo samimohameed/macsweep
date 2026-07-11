@@ -5,9 +5,11 @@ is made by the domain/application layers behind AppService.
 """
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -27,6 +29,61 @@ from ...domain.entities import CleanupItem, ScanReport
 from .workers import CleanWorker, ScanWorker, SignalReporter
 
 ITEM_ROLE = Qt.ItemDataRole.UserRole
+ACCENT = "#4f46e5"
+ACCENT_HOVER = "#4338ca"
+
+STYLE = f"""
+QPushButton {{
+    padding: 7px 18px;
+    border-radius: 8px;
+    border: 1px solid palette(mid);
+    background: palette(button);
+    font-size: 13px;
+}}
+QPushButton:hover {{ background: palette(midlight); }}
+QPushButton#primary {{
+    background: {ACCENT};
+    color: white;
+    border: none;
+    font-weight: 600;
+}}
+QPushButton#primary:hover {{ background: {ACCENT_HOVER}; }}
+QPushButton#primary:disabled {{
+    background: palette(mid);
+    color: palette(placeholder-text);
+}}
+QTreeWidget {{
+    border: 1px solid palette(mid);
+    border-radius: 10px;
+    padding: 4px;
+}}
+QTreeWidget::item {{ min-height: 26px; }}
+QHeaderView::section {{
+    background: transparent;
+    border: none;
+    padding: 6px;
+    font-weight: 600;
+    color: palette(text);
+}}
+QProgressBar#sharebar {{
+    border: none;
+    background: palette(alternate-base);
+    border-radius: 3px;
+    max-height: 7px;
+    min-height: 7px;
+}}
+QProgressBar#sharebar::chunk {{
+    background: {ACCENT};
+    border-radius: 3px;
+}}
+QProgressBar#busybar {{
+    border: none;
+    background: palette(alternate-base);
+    border-radius: 3px;
+    max-height: 6px;
+}}
+QProgressBar#busybar::chunk {{ background: {ACCENT}; border-radius: 3px; }}
+"""
 
 
 def _human(size: int) -> str:
@@ -38,11 +95,18 @@ def _human(size: int) -> str:
     return f"{value:,.1f} TB"
 
 
+def _tilde(path) -> str:
+    text = str(path)
+    home = str(Path.home())
+    return "~" + text[len(home):] if text.startswith(home) else text
+
+
 class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("MacSweep — safe, recoverable cleaning")
-        self.resize(860, 620)
+        self.setWindowTitle("MacSweep")
+        self.resize(900, 640)
+        self.setStyleSheet(STYLE)
 
         self._reporter = SignalReporter()
         self._reporter.message.connect(self._on_status)
@@ -57,35 +121,82 @@ class MainWindow(QMainWindow):
     def _build_ui(self) -> None:
         root = QWidget()
         layout = QVBoxLayout(root)
+        layout.setContentsMargins(20, 16, 20, 10)
+        layout.setSpacing(12)
 
+        # Branded header: icon, name + tagline, big reclaimable total.
         header = QHBoxLayout()
-        self.scan_btn = QPushButton("Scan")
-        self.scan_btn.clicked.connect(self._start_scan)
-        self.clean_btn = QPushButton("Clean selected (moves to Trash)")
-        self.clean_btn.setEnabled(False)
-        self.clean_btn.clicked.connect(self._start_clean)
-        self.total_label = QLabel("Press Scan to find reclaimable space.")
-        header.addWidget(self.scan_btn)
-        header.addWidget(self.clean_btn)
+        header.setSpacing(12)
+        icon_path = Path(__file__).parent / "assets" / "icon.png"
+        if icon_path.exists():
+            icon_label = QLabel()
+            icon_label.setPixmap(
+                QPixmap(str(icon_path)).scaled(
+                    52, 52,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            )
+            header.addWidget(icon_label)
+        title_box = QVBoxLayout()
+        title_box.setSpacing(0)
+        title = QLabel("MacSweep")
+        title.setStyleSheet("font-size: 21px; font-weight: 700;")
+        tagline = QLabel("Safe storage cleaner — nothing is deleted, only moved to Trash")
+        tagline.setStyleSheet("color: gray; font-size: 12px;")
+        title_box.addWidget(title)
+        title_box.addWidget(tagline)
+        header.addLayout(title_box)
         header.addStretch(1)
-        header.addWidget(self.total_label)
+        total_box = QVBoxLayout()
+        total_box.setSpacing(0)
+        self.total_label = QLabel("—")
+        self.total_label.setStyleSheet(
+            f"font-size: 22px; font-weight: 700; color: {ACCENT};"
+        )
+        self.total_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.total_caption = QLabel("press Scan to begin")
+        self.total_caption.setStyleSheet("color: gray; font-size: 11px;")
+        self.total_caption.setAlignment(Qt.AlignmentFlag.AlignRight)
+        total_box.addWidget(self.total_label)
+        total_box.addWidget(self.total_caption)
+        header.addLayout(total_box)
         layout.addLayout(header)
 
+        # Action row.
+        actions = QHBoxLayout()
+        self.scan_btn = QPushButton("Scan")
+        self.scan_btn.setObjectName("primary")
+        self.scan_btn.clicked.connect(self._start_scan)
+        self.clean_btn = QPushButton("Clean selected  →  Trash")
+        self.clean_btn.setEnabled(False)
+        self.clean_btn.clicked.connect(self._start_clean)
+        actions.addWidget(self.scan_btn)
+        actions.addWidget(self.clean_btn)
+        actions.addStretch(1)
+        layout.addLayout(actions)
+
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Item", "Size", "Age (days)"])
-        self.tree.setColumnWidth(0, 560)
+        self.tree.setHeaderLabels(["Item", "Size", "", "Age (days)"])
+        self.tree.setColumnWidth(0, 470)
+        self.tree.setColumnWidth(1, 110)
+        self.tree.setColumnWidth(2, 130)
+        self.tree.setAlternatingRowColors(True)
         self.tree.itemChanged.connect(self._on_item_changed)
         layout.addWidget(self.tree)
 
         safety = QLabel(
             "Whitelist-only · never touches system files, apps, or documents · "
-            "everything goes to the Trash and is recoverable."
+            "everything is recoverable from the Trash"
         )
-        safety.setStyleSheet("color: gray;")
+        safety.setStyleSheet("color: gray; font-size: 11px;")
+        safety.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(safety)
 
         self.progress = QProgressBar()
+        self.progress.setObjectName("busybar")
         self.progress.setRange(0, 0)  # busy indicator
+        self.progress.setTextVisible(False)
         self.progress.hide()
         layout.addWidget(self.progress)
 
@@ -109,6 +220,9 @@ class MainWindow(QMainWindow):
     def _on_scan_done(self, report: ScanReport) -> None:
         self._set_busy(False)
         names = {t.id: t.name for t in self._app.list_targets()}
+        total = max(report.total_bytes, 1)
+        bold = QFont()
+        bold.setBold(True)
         self.tree.blockSignals(True)
         for target_id, items in sorted(
             report.by_target().items(),
@@ -116,8 +230,15 @@ class MainWindow(QMainWindow):
         ):
             subtotal = sum(i.size_bytes for i in items)
             group = QTreeWidgetItem(
-                [names.get(target_id, target_id), _human(subtotal), ""]
+                [
+                    f"{names.get(target_id, target_id)}   ·   {len(items)} items",
+                    _human(subtotal),
+                    "",
+                    "",
+                ]
             )
+            group.setFont(0, bold)
+            group.setFont(1, bold)
             group.setFlags(
                 group.flags()
                 | Qt.ItemFlag.ItemIsUserCheckable
@@ -126,13 +247,31 @@ class MainWindow(QMainWindow):
             group.setCheckState(0, Qt.CheckState.Checked)
             for item in sorted(items, key=lambda i: -i.size_bytes):
                 child = QTreeWidgetItem(
-                    [str(item.path), _human(item.size_bytes), f"{item.age_days:.0f}"]
+                    [
+                        _tilde(item.path),
+                        _human(item.size_bytes),
+                        "",
+                        f"{item.age_days:.0f}",
+                    ]
                 )
                 child.setFlags(child.flags() | Qt.ItemFlag.ItemIsUserCheckable)
                 child.setCheckState(0, Qt.CheckState.Checked)
                 child.setData(0, ITEM_ROLE, item)
+                child.setToolTip(0, str(item.path))
                 group.addChild(child)
             self.tree.addTopLevelItem(group)
+
+            # Proportional share bar so the big categories pop visually.
+            bar = QProgressBar()
+            bar.setObjectName("sharebar")
+            bar.setRange(0, 100)
+            bar.setValue(max(2, round(subtotal * 100 / total)))
+            bar.setTextVisible(False)
+            holder = QWidget()
+            holder_layout = QVBoxLayout(holder)
+            holder_layout.setContentsMargins(4, 10, 12, 10)
+            holder_layout.addWidget(bar)
+            self.tree.setItemWidget(group, 2, holder)
         self.tree.blockSignals(False)
 
         if report.items:
@@ -141,7 +280,8 @@ class MainWindow(QMainWindow):
             )
         else:
             self.statusBar().showMessage("Scan finished — nothing to clean.")
-            self.total_label.setText("Your Mac looks tidy. ✨")
+            self.total_label.setText("0 B")
+            self.total_caption.setText("your Mac looks tidy ✨")
         self._refresh_selection_total()
 
     # ---- clean ----
@@ -206,9 +346,8 @@ class MainWindow(QMainWindow):
         items = self._checked_items()
         total = sum(i.size_bytes for i in items)
         if items:
-            self.total_label.setText(
-                f"Selected: {_human(total)} across {len(items)} items"
-            )
+            self.total_label.setText(_human(total))
+            self.total_caption.setText(f"selected across {len(items):,} items")
         self.clean_btn.setEnabled(bool(items) and not self.progress.isVisible())
 
     def _on_item_changed(self, _item, _column) -> None:

@@ -158,6 +158,69 @@ class TestScanRecursion(unittest.TestCase):
             self.assertNotIn(fresh.resolve(), paths)      # fresh file gated
 
 
+class TestOverlappingTargets(unittest.TestCase):
+    """A nested target (e.g. Homebrew inside ~/Library/Caches) must be
+    claimed only by its own target, never double-counted by the broader
+    one — otherwise totals inflate and items appear twice."""
+
+    def test_nested_target_root_is_not_scanned_twice(self):
+        with _home_tmpdir() as tmp:
+            caches = Path(tmp) / "Caches"
+            brew = caches / "Homebrew"
+            brew.mkdir(parents=True)
+            blob = brew / "bottle.tar.gz"
+            blob.write_bytes(b"x" * 100)
+            other = caches / "com.example.app"
+            other.mkdir()
+            (other / "cache.db").write_bytes(b"y" * 50)
+            old = time.time() - 30 * 86_400
+            for p in (blob, brew, other, other / "cache.db"):
+                os.utime(p, (old, old))
+
+            broad = CleanupTarget(
+                id="caches", name="c", description="", root=caches, min_age_days=1
+            )
+            nested = CleanupTarget(
+                id="brew", name="b", description="", root=brew, min_age_days=1
+            )
+            report = ScanUseCase(LocalFileSystem(), POLICY).execute([broad, nested])
+
+            paths = [i.path for i in report.items]
+            self.assertEqual(len(paths), len(set(paths)), "duplicate items found")
+            # Homebrew content must be claimed by the nested target only.
+            brew_claims = [i for i in report.items if i.target_id == "brew"]
+            self.assertEqual(len(brew_claims), 1)
+            self.assertNotIn(brew.resolve(), [i.path for i in report.items])
+            total = sum(i.size_bytes for i in report.items)
+            self.assertEqual(total, 150)  # 100 + 50, nothing counted twice
+
+    def test_symlink_alias_within_target_not_double_counted(self):
+        """Homebrew-style layout: a top-level symlink aliases a real file in
+        downloads/. Both resolve to the same content — count it once."""
+        with _home_tmpdir() as tmp:
+            caches = Path(tmp) / "Caches"
+            downloads = caches / "downloads"
+            downloads.mkdir(parents=True)
+            real = downloads / "bottle.tar.gz"
+            real.write_bytes(b"x" * 100)
+            alias = caches / "0abc--bottle.tar.gz"  # sorts before 'downloads'
+            alias.symlink_to(real)
+            old = time.time() - 30 * 86_400
+            for p in (real, downloads, caches):
+                os.utime(p, (old, old))
+            os.utime(alias, (old, old), follow_symlinks=False)
+
+            target = CleanupTarget(
+                id="t", name="t", description="", root=caches, min_age_days=1
+            )
+            report = ScanUseCase(LocalFileSystem(), POLICY).execute([target])
+
+            total = sum(i.size_bytes for i in report.items)
+            self.assertEqual(total, 100, f"double-counted: {report.items}")
+            paths = [str(i.path) for i in report.items]
+            self.assertEqual(len(paths), len(set(paths)))
+
+
 class RecordingRemover:
     def __init__(self):
         self.removed: list[Path] = []
