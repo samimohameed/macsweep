@@ -10,7 +10,7 @@
 
 A free, open-source alternative to CleanMyMac for reclaiming disk space from caches, logs, and developer-tool build artifacts. **Whitelist-only by architecture**: it cannot touch the OS, system files, installed applications, or your personal data — the safety rules are enforced in code, not by convention, and covered by CI-run tests.
 
-![MacSweep scan dashboard](docs/screenshot.png)
+![MacSweep demo: scan, review, and the Show-skipped transparency view](docs/demo.gif)
 
 |  | MacSweep | CleanMyMac | DaisyDisk |
 |---|---|---|---|
