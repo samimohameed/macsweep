@@ -5,5 +5,6 @@ build/
 dist/
 .venv/
 venv/
+docs/launch
 .pytest_cache/
 .DS_Store

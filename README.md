@@ -31,6 +31,8 @@ python3 -m macsweep gui
 
 Scan, review every item with checkboxes grouped by category, and clean with one click. The GUI **only ever moves items to the Trash** — everything stays recoverable; permanent deletion is deliberately CLI-only.
 
+Wondering why a scan offers less than other cleaners claim? Click **Show skipped** — MacSweep lists every item it saw but left alone, with the exact safety rule that protected it. Deleting a cache an app used yesterday just makes the app rebuild it, so honest numbers beat big numbers.
+
 ## CLI quick start
 
 ```bash

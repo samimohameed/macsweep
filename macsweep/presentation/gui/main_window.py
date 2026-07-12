@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QPixmap
+from PySide6.QtGui import QColor, QFont, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -113,6 +113,8 @@ class MainWindow(QMainWindow):
         self._app = build_app(self._reporter)
         self._scan_worker: Optional[ScanWorker] = None
         self._clean_worker: Optional[CleanWorker] = None
+        self._last_report: Optional[ScanReport] = None
+        self._skipped_group: Optional[QTreeWidgetItem] = None
 
         self._build_ui()
 
@@ -171,8 +173,17 @@ class MainWindow(QMainWindow):
         self.clean_btn = QPushButton("Clean selected  →  Trash")
         self.clean_btn.setEnabled(False)
         self.clean_btn.clicked.connect(self._start_clean)
+        self.skipped_btn = QPushButton("Show skipped")
+        self.skipped_btn.setCheckable(True)
+        self.skipped_btn.setEnabled(False)
+        self.skipped_btn.setToolTip(
+            "Items the scan saw but left alone — and the exact rule that "
+            "protected each one (age gate, blocklist, symlink escape, …)."
+        )
+        self.skipped_btn.toggled.connect(lambda _c: self._render_skipped())
         actions.addWidget(self.scan_btn)
         actions.addWidget(self.clean_btn)
+        actions.addWidget(self.skipped_btn)
         actions.addStretch(1)
         layout.addLayout(actions)
 
@@ -208,6 +219,9 @@ class MainWindow(QMainWindow):
     def _start_scan(self) -> None:
         self._set_busy(True, "Scanning…")
         self.tree.clear()
+        self._skipped_group = None
+        self._last_report = None
+        self.skipped_btn.setEnabled(False)
         targets = self._app.select_targets()  # safe defaults; no opt-in targets
         self._scan_worker = ScanWorker(self._app, targets)
         self._scan_worker.target_started.connect(
@@ -274,15 +288,69 @@ class MainWindow(QMainWindow):
             self.tree.setItemWidget(group, 2, holder)
         self.tree.blockSignals(False)
 
+        self._last_report = report
+        self.skipped_btn.setEnabled(bool(report.skipped))
+        self.skipped_btn.setText(f"Show skipped ({len(report.skipped):,})")
+        self._render_skipped()
+
         if report.items:
             self.statusBar().showMessage(
-                f"Scan finished — {len(report.items)} items eligible."
+                f"Scan finished — {len(report.items)} items eligible, "
+                f"{len(report.skipped):,} left alone."
             )
         else:
-            self.statusBar().showMessage("Scan finished — nothing to clean.")
+            self.statusBar().showMessage(
+                f"Scan finished — nothing to clean "
+                f"({len(report.skipped):,} items protected by the safety rules)."
+            )
             self.total_label.setText("0 B")
             self.total_caption.setText("your Mac looks tidy ✨")
         self._refresh_selection_total()
+
+    def _render_skipped(self) -> None:
+        """Show/hide the read-only 'skipped items' group at the bottom.
+        by listing each skipped item with the exact rule that protected it.
+        """
+        if self._skipped_group is not None:
+            index = self.tree.indexOfTopLevelItem(self._skipped_group)
+            if index >= 0:
+                self.tree.takeTopLevelItem(index)
+            self._skipped_group = None
+        if not self.skipped_btn.isChecked() or not self._last_report:
+            return
+        skipped = self._last_report.skipped
+        if not skipped:
+            return
+
+        self.tree.blockSignals(True)
+        gray = QColor("gray")
+        group = QTreeWidgetItem(
+            [f"Skipped — protected by safety rules   ·   {len(skipped):,} items",
+             "", "", ""]
+        )
+        font = QFont()
+        font.setBold(True)
+        group.setFont(0, font)
+        for col in range(4):
+            group.setForeground(col, gray)
+        limit = 300
+        for path, reason in skipped[:limit]:
+            child = QTreeWidgetItem([_tilde(path), "", "", reason])
+            child.setToolTip(0, str(path))
+            child.setToolTip(3, reason)
+            for col in range(4):
+                child.setForeground(col, gray)
+            group.addChild(child)
+        if len(skipped) > limit:
+            more = QTreeWidgetItem(
+                [f"… and {len(skipped) - limit:,} more", "", "", ""]
+            )
+            more.setForeground(0, gray)
+            group.addChild(more)
+        self.tree.addTopLevelItem(group)
+        group.setExpanded(True)
+        self._skipped_group = group
+        self.tree.blockSignals(False)
 
     # ---- clean ----
 

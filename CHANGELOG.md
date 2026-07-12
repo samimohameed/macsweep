@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **GUI: "Show skipped" view.** One click lists every item the scan saw but left alone, with the exact safety rule that protected it (age gate, blocklist, symlink escape…). Answers "why do different cleaners show different numbers?" with full transparency.
+
 ## v0.2.2 — 2026-07-11
 
 - **Fix: file ages are now honest for downloaded files.** Downloaders like Homebrew's preserve the *server's* modification time, so a bottle fetched an hour ago could show as "304 days old" and be swept by mistake. Age now also considers ctime (last change on this disk, which cannot be backdated), so freshly arrived files are correctly age-gated.
