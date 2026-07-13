@@ -88,6 +88,44 @@ def default_targets() -> list[CleanupTarget]:
             min_age_days=14,
         ),
         CleanupTarget(
+            id="gradle-cache",
+            name="Gradle cache",
+            description="Downloaded dependencies and build caches in "
+                        "~/.gradle/caches; Gradle re-fetches on demand.",
+            root=HOME / ".gradle" / "caches",
+            risk=Risk.SAFE,
+            min_age_days=30,
+        ),
+        CleanupTarget(
+            id="cargo-cache",
+            name="Cargo registry cache",
+            description="Downloaded crate archives in ~/.cargo/registry/cache; "
+                        "re-fetched by cargo when needed. Does not touch "
+                        "registry/index or installed binaries.",
+            root=HOME / ".cargo" / "registry" / "cache",
+            risk=Risk.SAFE,
+            min_age_days=30,
+        ),
+        CleanupTarget(
+            id="go-build-cache",
+            name="Go build cache",
+            description="Compiler build cache in ~/Library/Caches/go-build; "
+                        "regenerated on the next build.",
+            root=HOME / "Library" / "Caches" / "go-build",
+            risk=Risk.SAFE,
+            min_age_days=14,
+        ),
+        CleanupTarget(
+            id="playwright-browsers",
+            name="Playwright browser downloads",
+            description="Browser builds downloaded by Playwright into "
+                        "~/Library/Caches/ms-playwright. MODERATE: large "
+                        "re-download via 'npx playwright install'.",
+            root=HOME / "Library" / "Caches" / "ms-playwright",
+            risk=Risk.MODERATE,
+            min_age_days=60,
+        ),
+        CleanupTarget(
             id="trash",
             name="Trash (older items)",
             description="Items already in your Trash. OPT-IN because emptying "

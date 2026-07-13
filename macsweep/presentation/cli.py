@@ -73,6 +73,8 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("targets", help="List all cleanup targets")
+    sub.add_parser("insights", help="Show big tool-managed stores MacSweep "
+                                    "won't touch, and the safe way to reclaim them")
     sub.add_parser("gui", help="Launch the desktop app (requires PySide6)")
 
     p_scan = sub.add_parser("scan", help="Scan (read-only) and show reclaimable space")
@@ -111,6 +113,21 @@ def main(argv: list[str] | None = None) -> int:
         for t in app.list_targets():
             flag = " (opt-in)" if t.risk is Risk.OPT_IN else ""
             print(f"{t.id:<22} {t.name}{flag}\n{'':<22} {t.description}\n")
+        return 0
+
+    if args.command == "insights":
+        insights = app.insights()
+        if not insights:
+            print("No large tool-managed stores found. Nothing to point at.")
+            return 0
+        print("Big stores MacSweep deliberately won't touch — and the safe "
+              "way to reclaim them:\n")
+        for ins in insights:
+            print(f"  {ins.title}  —  {_human(ins.size_bytes)}")
+            print(f"     {ins.path}")
+            print(f"     {ins.explanation}")
+            verb = "Run:" if ins.copyable else "Do: "
+            print(f"     {verb} {ins.command}\n")
         return 0
 
     targets = app.select_targets(

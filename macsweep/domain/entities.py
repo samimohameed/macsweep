@@ -74,6 +74,25 @@ class ScanReport:
         return grouped
 
 
+@dataclass(frozen=True)
+class Insight:
+    """A large tool-managed store MacSweep deliberately will not touch,
+    plus the tool's own safe way to reclaim it.
+
+    Insights are read-only by definition: MacSweep only measures the
+    location and points the user at the owning tool's native command.
+    """
+
+    id: str
+    title: str
+    path: Path
+    explanation: str          # why MacSweep refuses to touch it
+    command: str              # the safe, native way to reclaim it
+    copyable: bool = True     # False when `command` is an instruction, not shell
+    min_bytes: int = 100 * 1024 * 1024   # hide below this size
+    size_bytes: int = 0       # filled in at scan time
+
+
 @dataclass
 class CleanReport:
     """Result of executing a clean operation."""

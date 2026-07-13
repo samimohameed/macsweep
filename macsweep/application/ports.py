@@ -26,6 +26,12 @@ class FileSystemPort(Protocol):
         """Total size in bytes (recursive for directories)."""
         ...
 
+    def allocated_size_of(self, path: Path) -> int:
+        """Actual disk blocks used (recursive). Differs from size_of for
+        sparse files such as Docker's disk image, whose apparent size can
+        be hundreds of GB while occupying almost nothing."""
+        ...
+
     def age_days(self, path: Path) -> float:
         """Days since last modification (newest mtime within a directory)."""
         ...

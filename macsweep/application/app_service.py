@@ -14,6 +14,7 @@ from ..domain.entities import (
     CleanReport,
     CleanupItem,
     CleanupTarget,
+    Insight,
     Risk,
     ScanReport,
 )
@@ -32,6 +33,7 @@ class AppService:
         all_targets: list[CleanupTarget],
         trash_remover: RemoverPort,
         permanent_remover: RemoverPort,
+        insight_specs: Optional[list[Insight]] = None,
     ) -> None:
         self._fs = fs
         self._policy = policy
@@ -39,6 +41,7 @@ class AppService:
         self._all_targets = list(all_targets)
         self._trash_remover = trash_remover
         self._permanent_remover = permanent_remover
+        self._insight_specs = list(insight_specs or [])
 
     # ---- targets ----
 
@@ -92,6 +95,27 @@ class AppService:
             report.skipped.extend(partial.skipped)
             report.errors.extend(partial.errors)
         return report
+
+    def insights(self) -> list[Insight]:
+        """Measure known tool-managed stores MacSweep refuses to touch.
+
+        Read-only by construction: there is no code path from an Insight
+        to any remover. Missing or unreadable locations are silently
+        skipped; results are sorted largest first.
+        """
+        found: list[Insight] = []
+        for spec in self._insight_specs:
+            try:
+                if not self._fs.exists(spec.path):
+                    continue
+                # Allocated (not apparent) size: sparse files like Docker's
+                # disk image would otherwise overstate by hundreds of GB.
+                size = self._fs.allocated_size_of(self._fs.resolve(spec.path))
+            except OSError:
+                continue
+            if size >= spec.min_bytes:
+                found.append(replace(spec, size_bytes=size))
+        return sorted(found, key=lambda i: -i.size_bytes)
 
     def clean(
         self,

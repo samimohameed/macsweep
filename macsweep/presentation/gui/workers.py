@@ -44,6 +44,24 @@ class ScanWorker(QThread):
             self.failed.emit(str(exc))
 
 
+class InsightsWorker(QThread):
+    """Measures known tool-managed stores (read-only; can take a moment
+    for multi-GB directories) off the UI thread."""
+
+    finished_with = Signal(list)  # list[Insight]
+    failed = Signal(str)
+
+    def __init__(self, app: AppService) -> None:
+        super().__init__()
+        self._app = app
+
+    def run(self) -> None:
+        try:
+            self.finished_with.emit(self._app.insights())
+        except Exception as exc:
+            self.failed.emit(str(exc))
+
+
 class CleanWorker(QThread):
     progress = Signal(int, int, str)  # current, total, path
     finished_with = Signal(CleanReport)

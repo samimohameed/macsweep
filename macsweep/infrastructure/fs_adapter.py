@@ -38,6 +38,21 @@ class LocalFileSystem:
                     continue
         return total
 
+    def allocated_size_of(self, path: Path) -> int:
+        if path.is_file() or path.is_symlink():
+            try:
+                return path.lstat().st_blocks * 512
+            except OSError:
+                return 0
+        total = 0
+        for dirpath, _dirnames, filenames in os.walk(path, followlinks=False):
+            for name in filenames:
+                try:
+                    total += os.lstat(os.path.join(dirpath, name)).st_blocks * 512
+                except OSError:
+                    continue
+        return total
+
     def age_days(self, path: Path) -> float:
         """Days since the *newest* modification anywhere inside the path.
 

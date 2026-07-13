@@ -10,6 +10,7 @@ from .application.app_service import AppService
 from .application.ports import ReporterPort
 from .domain.policies import SafetyPolicy
 from .infrastructure.fs_adapter import LocalFileSystem
+from .infrastructure.macos_insights import default_insights
 from .infrastructure.macos_targets import default_targets
 from .infrastructure.trash import PermanentRemover, TrashRemover
 
@@ -22,4 +23,5 @@ def build_app(reporter: ReporterPort) -> AppService:
         all_targets=default_targets(),
         trash_remover=TrashRemover(),
         permanent_remover=PermanentRemover(),
+        insight_specs=default_insights(),
     )
