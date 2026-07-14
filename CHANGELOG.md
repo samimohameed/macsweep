@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 — 2026-07-14
 
 - **GUI: "Show skipped" view.** One click lists every item the scan saw but left alone, with the exact safety rule that protected it (age gate, blocklist, symlink escape…). Answers "why do different cleaners show different numbers?" with full transparency.
 - **Four new cleanup targets**: Gradle cache (`~/.gradle/caches`), Cargo registry cache (`~/.cargo/registry/cache`), Go build cache (`~/Library/Caches/go-build`), and Playwright browser downloads (`~/Library/Caches/ms-playwright`, opt-out-friendly MODERATE risk). As always, the blocklist and age gate apply on top.
