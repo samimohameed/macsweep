@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import platform
 import sys
 
@@ -63,7 +64,26 @@ def _print_report(report, names: dict[str, str], verbose: bool) -> None:
         for path, reason in report.errors[:20]:
             print(f"   {path}  ->  {reason}")
 
-
+def _print_json_report(report) -> None:
+    """Serialize a ScanReport as JSON on stdout, nothing else. Used by
+    `scan --json` for scripting (e.g. `macsweep scan --json | jq ...`).
+    Errors/warnings must never touch stdout here or they'd corrupt the
+    JSON stream for consumers piping it into a parser."""
+    payload = {
+        "items": [
+            {
+                "path": str(item.path),
+                "target_id": item.target_id,
+                "size_bytes": item.size_bytes,
+                "age_days": item.age_days,
+            }
+            for item in report.items
+        ],
+        "total_bytes": report.total_bytes,
+        "skipped": len(report.skipped),
+        "errors": len(report.errors),
+    }
+    print(json.dumps(payload))
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="macsweep",
@@ -76,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("insights", help="Show big tool-managed stores MacSweep "
                                     "won't touch, and the safe way to reclaim them")
     sub.add_parser("gui", help="Launch the desktop app (requires PySide6)")
+
 
     p_scan = sub.add_parser("scan", help="Scan (read-only) and show reclaimable space")
     p_clean = sub.add_parser("clean", help="Clean scanned items (dry run by default)")
@@ -92,6 +113,10 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("-v", "--verbose", action="store_true",
                        help="Show skipped items and reasons")
 
+    p_scan.add_argument(
+        "--json", action="store_true",
+        help="Print the scan report as JSON instead of text (for scripting)",
+    )
     p_clean.add_argument("--yes", action="store_true",
                          help="Actually perform the clean (otherwise dry run)")
     p_clean.add_argument("--permanent", action="store_true",
@@ -130,10 +155,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"     {verb} {ins.command}\n")
         return 0
 
+   
     targets = app.select_targets(
         include_opt_in=args.include, only=args.only, min_age_days=args.min_age
     )
     report = app.scan(targets)
+
+    if args.command == "scan" and getattr(args, "json", False):
+        _print_json_report(report)
+        return 0
+
     names = {t.id: t.name for t in app.list_targets()}
     _print_report(report, names, args.verbose)
 
